@@ -1,14 +1,15 @@
 ﻿using physics_equations;
 using System;
+using System.Numerics;
 using System.Reflection;
+using static helperFunctions.HelperFunctions;
 
 
 while (true)
 {
-
     Console.WriteLine("Enter a command:");
     string input = Console.ReadLine();
-    if(input == "c")
+    if(input == "clear")
     {
         Console.Clear();
         continue;
@@ -29,46 +30,78 @@ while (true)
 
     if (method != null && method.GetParameters().Length <= inputArray.Length - 1)
     {
-        // Convert the input values to doubles using TryParse
-        double[] parsedValues = inputArray.Skip(1).Select(s =>
+        ParameterInfo[] parameters = method.GetParameters();
+        object[] parsedValues = new object[parameters.Length];
+
+        // Loop through the parameters and parse the corresponding input values
+        for (int i = 0; i < parameters.Length; i++)
         {
-            double value;
-            if (double.TryParse(s, out value))
+            ParameterInfo parameter = parameters[i];
+            Type parameterType = parameter.ParameterType;
+
+            // Check if the input value can be parsed to the parameter type
+            if (i + 1 < inputArray.Length)
             {
-                return value;
-            }
+                string inputValue = inputArray[i + 1];
+                object parsedValue = null;
 
-            // Check if the input is a valid constant/variable
-            FieldInfo constantOrVariable = typeof(PhysicsEquations).GetField(s, BindingFlags.Public | BindingFlags.Static);
-            if (constantOrVariable != null)
+                physicsEquations.random = new Random().NextDouble();
+                
+                // Check if the input is a valid constant/variable
+                FieldInfo constantOrVariable = typeof(PhysicsEquations).GetField(inputValue, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                if (constantOrVariable != null)
+                {
+                    // Retrieve the constant/variable value
+                    parsedValue = constantOrVariable.GetValue(physicsEquations);
+                }
+                else if (TryParseValue(inputValue, parameterType, out parsedValue))
+                {
+                    // Input value can be parsed to the parameter type
+                }
+                else
+                {
+                    // Invalid parameter entered
+                    Console.WriteLine("Invalid parameter(s) entered");
+                    break;
+                }
+
+                parsedValues[i] = parsedValue;
+            }
+            else
             {
-                // Retrieve the constant/variable value
-                double constantOrVariableValue = (double)constantOrVariable.GetValue(null);
-                return constantOrVariableValue;
+                // Insufficient number of parameters
+                Console.WriteLine("Insufficient number of parameters");
+                break;
             }
-
-            // Invalid parameter entered
-            return double.NaN;
-        }).ToArray();
-
-        // Check if any parsing errors occurred
-        if (parsedValues.Contains(double.NaN))
-        {
-            Console.WriteLine("Invalid parameter(s) entered");
         }
-        else
+        // Check if all parameters were successfully parsed
+        if (parsedValues.All(value => value != null))
         {
             // Invoke the method on the instance with the modified parameters
-            object result = method.Invoke(physicsEquations, parsedValues.Cast<object>().ToArray());
+            object result = method.Invoke(physicsEquations, parsedValues);
 
             // Check if the method has a return value
             if (result != null)
             {
-                // Cast the returned value to the appropriate type
-                double returnValue = (double)result;
+                Type returnType = method.ReturnType;
 
-                // Use the returned value as needed
-                Console.WriteLine("Result: " + returnValue);
+                if (returnType == typeof(double))
+                {
+                    // Cast the returned value to double
+                    double returnValue = (double)result;
+                    Console.WriteLine("Result: " + returnValue);
+                }
+                else if (returnType == typeof(Vector3))
+                {
+                    // Cast the returned value to Vector3
+                    Vector3 returnVector = (Vector3)result;
+                    Console.WriteLine("Result: " + returnVector);
+                }
+                else
+                {
+                    // Handle unsupported return type
+                    Console.WriteLine("Unsupported return type");
+                }
             }
             commandFound = true;
         }

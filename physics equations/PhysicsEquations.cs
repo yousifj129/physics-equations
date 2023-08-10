@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Numerics;
+
 using static helperFunctions.HelperFunctions;
 
 namespace physics_equations
@@ -12,6 +14,8 @@ namespace physics_equations
         #region constants
         // Gravitational constant (units: m^3 kg^-1 s^-2)
         public const double GravitationalConstant = 6.67430e-11;
+
+        public const double AccelerationConstant = 1.2e-10; // MOND acceleration constant in m/s^2
 
         // Planck constant (units: J s)
         public const double PlanckConstant = 6.62607015e-34;
@@ -95,9 +99,12 @@ namespace physics_equations
 
         // Planck time (units: s)
         public const double PlanckTime = 5.39116e-44;
+        
+        public const double CoulombConstant = 8.9875517923e9; // Coulomb's constant in N·m^2/C^2
+        
+        public double random = new Random().NextDouble();
 
         #endregion
-
 
         #region basic math functions
         public double add(double a, double b)
@@ -150,27 +157,27 @@ namespace physics_equations
             double probability = estimateNumber / NumberOfTries;
             return probability;
         }
-        public double CalculateComplementaryProbability(double probability)
+        public double ComplementaryProbability(double probability)
         {
             double complementaryProbability = 1 - probability;
             return complementaryProbability;
         }
-        public double CalculateJointProbability(double probabilityA, double probabilityB)
+        public double JointProbability(double probabilityA, double probabilityB)
         {
             double jointProbability = probabilityA * probabilityB;
             return jointProbability;
         }
-        public double CalculateProbabilityDensity(double wavefunction)
+        public double ProbabilityDensity(double wavefunction)
         {
             double probabilityDensity = Math.Pow(wavefunction, 2);
             return probabilityDensity;
         }
-        public double CalculateTransitionProbability(double initialWavefunction, double finalWavefunction)
+        public double TransitionProbability(double initialWavefunction, double finalWavefunction)
         {
             double transitionProbability = Math.Pow(Math.Abs(initialWavefunction * finalWavefunction), 2);
             return transitionProbability;
         }
-        public double CalculateFermiDiracDistribution(double energy, double temperature, double mu)
+        public double FermiDiracDistribution(double energy, double temperature, double mu)
         {
             double k = 8.617333262145e-5; // Boltzmann constant
             double fermiDiracDistribution = 1 / (Math.Exp((energy - mu) / (k * temperature)) + 1);
@@ -180,24 +187,23 @@ namespace physics_equations
 
         #region wave functions
 
-        public double CalculateBoxWaveFunction(double amplitude, double n, double boxLength, double position)
+        public double BoxWaveFunction(double amplitude, int n, double boxLength, double position)
         {
-            double wavefunction = amplitude * Math.Sin((int)n * Math.PI * position / boxLength);
+            double wavefunction = amplitude * Math.Sin(n * Math.PI * position / boxLength);
             return wavefunction;
         }
-        public  double CalculateGaussianWaveFunction(double amplitude, double sigma, double x, double x0)
+        public  double GaussianWaveFunction(double amplitude, double sigma, double x, double x0)
         {
             double wavefunction = amplitude * Math.Exp(-(Math.Pow(x - x0, 2)) / (2 * Math.Pow(sigma, 2)));
             return wavefunction;
         }
-        public double CalculateHarmonicOscillatorWaveFunction(double amplitude, double n, double x, double x0, double k)
+        public double HarmonicOscillatorWaveFunction(double amplitude, int n, double x, double x0, double k)
         {
-            double wavefunction = amplitude * Math.Pow(k / (Math.PI * (int)n), 0.25) * Math.Exp(-(Math.Pow(x - x0, 2) * k) / (2 * (int)n));
+            double wavefunction = amplitude * Math.Pow(k / (Math.PI * n), 0.25) * Math.Exp(-(Math.Pow(x - x0, 2) * k) / (2 * n));
             return wavefunction;
         }
-        public double CalculateCoulombWaveFunction(double amplitude, double ls, double k, double eta, double radius)
+        public double CoulombWaveFunction(double amplitude, int l, double k, double eta, double radius)
         {
-            int l = (int)ls;
             double wavefunction = amplitude * Math.Pow(k * radius, l) * Math.Exp(-Math.PI * eta / 2) * Math.Pow(2 * eta, l + 1) *
                 Math.Sqrt(Math.PI * Math.Exp(2 * Math.PI * eta)) * BesselFunction(l + 1.5, k * radius * eta) / (k * radius);
 
@@ -227,6 +233,85 @@ namespace physics_equations
             }
 
             return result;
+        }
+        #endregion
+
+        #region physics
+        public double KineticEnergy(double mass, double velocity)
+        {
+            double kineticEnergy = 0.5 * mass * Math.Pow(velocity, 2);
+            return kineticEnergy;
+        }
+        public double GravitationalPotentialEnergy(double mass, double height, double gravitationalAcceleration)
+        {
+            double gravitationalPotentialEnergy = mass * gravitationalAcceleration * height;
+            return gravitationalPotentialEnergy;
+        }
+        public double GravitationalEnergyMOND(double mass1, double mass2, double distance)
+        {
+            double gravitationalEnergy = (GravitationalConstant * mass1 * mass2) / (2 * AccelerationConstant) * Math.Log((distance * Math.Sqrt(AccelerationConstant)) / GravitationalConstant + 1);
+            return gravitationalEnergy;
+        }
+        public double GravitationalEnergyNewton(double mass1, double mass2, double distance)
+        {
+            double gravitationalEnergy = (GravitationalConstant * mass1 * mass2) / distance;
+            return gravitationalEnergy;
+        }
+        public  double GeneralRelativityGravity( double mass1, double mass2, double distance)
+        {
+            // Schwarzschild radius of the system
+            double rs = 2 * GravitationalConstant * (mass1 + mass2) / Math.Pow(SpeedOfLight, 2);
+
+            // Check if the objects are inside their combined Schwarzschild radius
+            if (distance <= rs)
+            {
+                return 0;
+            }
+
+            // Calculate the gravitational force using the general relativity equation
+            double force = -GravitationalConstant * mass1 * mass2 / (distance * distance) *
+                           (1 - rs / distance) / Math.Sqrt(1 - rs / distance);
+
+            return force;
+        }
+        #endregion
+
+        #region quantum physics
+        public double ElectrostaticEnergyC(double charge1, double charge2, double distance)
+        {
+            double electrostaticEnergy = CoulombConstant * charge1 * charge2 / distance;
+            return electrostaticEnergy;
+        }
+        #endregion
+        
+        #region vectors
+        public Vector3 AddVector(Vector3 vector1, Vector3 vector2)
+        {
+            Vector3 result = vector1 + vector2;
+            return result;
+        }
+        public Vector3 SubtractVector(Vector3 vector1, Vector3 vector2)
+        {
+            Vector3 result = vector1 - vector2;
+            return result;
+        }
+        public Vector3 DivideVector(Vector3 vector1, Vector3 vector2)
+        {
+            Vector3 result = vector1 / vector2;
+            return result;
+        }
+        public Vector3 MultiplyVector(Vector3 vector1, Vector3 vector2)
+        {
+            Vector3 result = vector1 * vector2;
+            return result;
+        }
+        public static double distanceSquaredVector(Vector3 pos1, Vector3 pos2)
+        {
+            double dx = pos2.X - pos1.X;
+            double dy = pos2.Y - pos1.Y;
+            double dz = pos2.Z - pos1.Z;
+
+            return dx * dx + dy * dy + dz * dz;
         }
         #endregion
     }

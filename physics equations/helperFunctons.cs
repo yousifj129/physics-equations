@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Numerics;
+
 
 namespace helperFunctions
 {
@@ -11,6 +13,63 @@ namespace helperFunctions
         public static void Print(string s)
         {
             Console.WriteLine(s);
+        }
+        public static bool TryParseValue(string value, Type targetType, out object parsedValue)
+        {
+            if (targetType == typeof(double))
+            {
+                if (double.TryParse(value, out double doubleValue))
+                {
+                    parsedValue = doubleValue;
+                    return true;
+                }
+            }
+            else if (targetType == typeof(int))
+            {
+                if (int.TryParse(value, out int intValue))
+                {
+                    parsedValue = intValue;
+                    return true;
+                }
+            }
+            else if (targetType == typeof(bool))
+            {
+                if (bool.TryParse(value, out bool boolValue))
+                {
+                    parsedValue = boolValue;
+                    return true;
+                }
+            }
+            else if(targetType == typeof(Vector3))
+            {
+                if (TryParseVector3(value, out Vector3 boolValue))
+                {
+                    parsedValue = boolValue;
+                    return true;
+                }
+            }
+            // Add more handling for other types as needed
+
+            parsedValue = null;
+            return false;
+        }
+
+        public static bool TryParseVector3(string value, out Vector3 parsedValue)
+        {
+            parsedValue = new Vector3(0,0,0);
+
+            string[] components = value.Split(',');
+
+            if (components.Length == 3 &&
+                float.TryParse(components[0], out float x) &&
+                float.TryParse(components[1], out float y) &&
+                float.TryParse(components[2], out float z))
+            {
+                parsedValue = new Vector3(x, y, z);
+                return true;
+            }
+
+            return false;
         }
     }
 }
