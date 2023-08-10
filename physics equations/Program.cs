@@ -69,8 +69,8 @@ while (true)
 
                 // Use the returned value as needed
                 Console.WriteLine("Result: " + returnValue);
-                commandFound = true;
             }
+            commandFound = true;
         }
     }
     else
@@ -87,6 +87,25 @@ while (true)
     }
     if (!commandFound)
     {
-        Console.WriteLine("Invalid command");
+        try
+        {
+            if(method != null)
+            {
+                ParameterInfo[] p = method.GetParameters();
+                string parametersNeeded = "\n";
+                foreach (ParameterInfo pi in p)
+                {
+                    parametersNeeded += pi.Name + ": " + pi.ParameterType.ToString() + ", ";
+                }
+                Console.WriteLine("Invalid command, " + $"variables needed for the function {method.Name}:" + parametersNeeded + $"\n{p.Length} parameters is needed");
+            }
+           
+        }
+        catch
+        {
+            Console.WriteLine("Invalid command");
+
+        }
+
     }
 }
