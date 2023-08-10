@@ -135,6 +135,12 @@ namespace physics_equations
         {
             return a - b;
         }
+        public double Random(double minValue, double maxValue)
+        {
+            Random random = new Random();
+            return random.NextDouble() * (maxValue - minValue) + minValue;
+        }
+
         #endregion
 
         #region uncertainty princples 
