@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Reflection;
 using static helperFunctions.HelperFunctions;
 
+PhysicsEquations p = new PhysicsEquations();
 
 while (true)
 {
@@ -14,7 +15,7 @@ while (true)
         Console.Clear();
         break;
     }
-    Console.WriteLine("results : " + PhysicsEquations.userInput(input));
+    Console.WriteLine("results : " + p.userInput(input));
 }
 
 /*double a = 0; 

@@ -48,17 +48,28 @@ namespace helperFunctions
                     return true;
                 }
             }
+            else if (targetType == typeof(Vector2))
+            {
+                if (TryParseVector2(value, out Vector2 boolValue))
+                {
+                    parsedValue = boolValue;
+                    return true;
+                }
+            }
             // Add more handling for other types as needed
 
             parsedValue = null;
             return false;
         }
-
+        public static string deleteSymbolsWithSpace(string value)
+        {
+            return value.Replace('<', ' ').Replace('>', ' ').Replace('(', ' ').Replace(')', ' ').Replace('{', ' ').Replace('}', ' ').Replace(" ", "");
+        }
         public static bool TryParseVector3(string value, out Vector3 parsedValue)
         {
             parsedValue = new Vector3(0,0,0);
-
-            string[] components = value.Split(',');
+            string s = deleteSymbolsWithSpace(value);
+            string[] components = s.Split(',');
 
             if (components.Length == 3 &&
                 float.TryParse(components[0], out float x) &&
@@ -66,6 +77,22 @@ namespace helperFunctions
                 float.TryParse(components[2], out float z))
             {
                 parsedValue = new Vector3(x, y, z);
+                return true;
+            }
+
+            return false;
+        }
+        public static bool TryParseVector2(string value, out Vector2 parsedValue)
+        {
+            parsedValue = new Vector2(0, 0);
+
+            string[] components = value.Split(',');
+
+            if (components.Length == 3 &&
+                float.TryParse(components[0], out float x) &&
+                float.TryParse(components[1], out float y))
+            {
+                parsedValue = new Vector2(x, y);
                 return true;
             }
 

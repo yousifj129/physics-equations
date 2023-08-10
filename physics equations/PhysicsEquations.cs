@@ -102,39 +102,46 @@ namespace physics_equations
         public const double PlanckTime = 5.39116e-44;
         
         public const double CoulombConstant = 8.9875517923e9; // Coulomb's constant in N·m^2/C^2
-        
+
+        public const double PI = Math.PI;
+
+        public const double goldenRatio = 1.618033988749894848204586834365638117720309179805762862135448622705260462818902449707207204189391;
+
+        public const double EulerNumber = 2.718281828459045235360287471352662497757247093699959574966967627724076630353547594571382178525166427;
+
+
         public double random = new Random().NextDouble();
 
         #endregion
 
         #region basic math functions
-        public double add(double a, double b)
+        public double add(double number1, double number2)
         {
-            return a + b;
+            return number1 + number2;
         }
-        public double divide(double a, double b)
+        public double divide(double number1, double number2)
         {
-            return a / b;
+            return number1 / number2;
         }
-        public double div(double a, double b)
+        public double div(double number1, double number2)
         {
-            return a / b;
+            return number1 / number2;
         }
-        public double multiply(double a, double b)
+        public double multiply(double number1, double number2)
         {
-            return a * b;
+            return number1 * number2;
         }
-        public double mult(double a, double b)
+        public double mult(double number1, double number2)
         {
-            return a * b;
+            return number1 * number2;
         }
-        public double subtract(double a, double b)
+        public double subtract(double number1, double number2)
         {
-            return a - b;
+            return number1 - number2;
         }
-        public double sub(double a, double b)
+        public double sub(double number1, double number2)
         {
-            return a - b;
+            return number1 - number2;
         }
         public double Random(double minValue, double maxValue)
         {
@@ -249,6 +256,55 @@ namespace physics_equations
             double kineticEnergy = 0.5 * mass * Math.Pow(velocity, 2);
             return kineticEnergy;
         }
+        public double KineticVelocity(double mass, double kineticEnergy)
+        {
+            // Ensure the mass and kinetic energy are positive
+            double positiveMass = Math.Abs(mass);
+            double positiveKineticEnergy = Math.Abs(kineticEnergy);
+
+            // Calculate the velocity using the formula: velocity = sqrt(2 * kineticEnergy / mass)
+            double velocity = Math.Sqrt((2 * positiveKineticEnergy) / positiveMass);
+
+            return velocity;
+        }
+        public Vector2 KineticVelocityVector2(double mass, double kineticEnergy, double angle)
+        {
+            // Ensure the mass and kinetic energy are positive
+            double positiveMass = Math.Abs(mass);
+            double positiveKineticEnergy = Math.Abs(kineticEnergy);
+
+            // Calculate the velocity magnitude using the formula: velocityMagnitude = sqrt(2 * kineticEnergy / mass)
+            double velocityMagnitude = Math.Sqrt((2 * positiveKineticEnergy) / positiveMass);
+
+            // Convert the angle from degrees to radians
+            double angleInRadians = Math.PI * angle / 180.0;
+
+            // Calculate the horizontal and vertical components of the velocity
+            double velocityX = velocityMagnitude * Math.Cos(angleInRadians);
+            double velocityY = velocityMagnitude * Math.Sin(angleInRadians);
+
+            // Create and return the velocity as a Vector2
+            Vector2 velocity = new Vector2((float)velocityX, (float)velocityY);
+            return velocity;
+        }
+        public Vector3 KineticVelocityVector3(double mass, double kineticEnergy, Vector3 direction)
+        {
+            // Ensure the mass and kinetic energy are positive
+            double positiveMass = Math.Abs(mass);
+            double positiveKineticEnergy = Math.Abs(kineticEnergy);
+
+            // Calculate the velocity magnitude using the formula: velocityMagnitude = sqrt(2 * kineticEnergy / mass)
+            double velocityMagnitude = Math.Sqrt((2 * positiveKineticEnergy) / positiveMass);
+
+            // Normalize the direction vector
+            Vector3 normalizedDirection = Vector3.Normalize(direction);
+
+            // Calculate the velocity components by multiplying the magnitude with the normalized direction
+            Vector3 velocity = MultiplyVectorByDouble(normalizedDirection, velocityMagnitude);
+
+            return velocity;
+        }
+        
         public double GravitationalPotentialEnergy(double mass, double height, double gravitationalAcceleration)
         {
             double gravitationalPotentialEnergy = mass * gravitationalAcceleration * height;
@@ -281,6 +337,30 @@ namespace physics_equations
 
             return force;
         }
+        public double CalculateElasticEnergy(double springConstant, double displacement)
+        {
+            // Ensure the displacement is positive
+            double positiveDisplacement = Math.Abs(displacement);
+
+            // Calculate the elastic energy using the formula: E = 0.5 * k * x^2
+            double elasticEnergy = 0.5 * springConstant * Math.Pow(positiveDisplacement, 2);
+
+            return elasticEnergy;
+        }
+        public double CalculateElasticEnergyComplex(double springConstantNPerMeter, double displacementMeters, double wireDiameterMeters, double coilCount)
+        {
+            // Ensure the displacement is positive
+            double positiveDisplacement = Math.Abs(displacementMeters);
+
+            // Calculate the effective spring constant based on the spring properties
+            double effectiveSpringConstant = (4.0 * springConstantNPerMeter * Math.Pow(wireDiameterMeters, 3)) * (coilCount * coilCount) / (wireDiameterMeters + coilCount * wireDiameterMeters);
+
+            // Calculate the elastic energy using the formula: E = 0.5 * k * x^2
+            double elasticEnergyJoules = 0.5 * effectiveSpringConstant * Math.Pow(positiveDisplacement, 2);
+
+            return elasticEnergyJoules;
+        }
+
         #endregion
 
         #region quantum physics
@@ -320,10 +400,29 @@ namespace physics_equations
 
             return dx * dx + dy * dy + dz * dz;
         }
+        public Vector3 MultiplyVectorByDouble(Vector3 v, double d)
+        {
+            return new Vector3(v.X * ((float)d), v.Y * ((float)d), v.Z * ((float)d));
+        }
         #endregion
 
         #region user input
-        public static string userInput(string input)
+        public object exampleBasedOnType(Type t)
+        {
+            if (t == typeof(double))
+            {
+                return  Math.Round(Random(0,10), 2);
+            }
+            else if (t == typeof(Vector3))
+            {
+                return $"{Math.Round(Random(0, 10), 1)},{Math.Round(Random(0, 10), 1)},{Math.Round(Random(0, 10), 1)}";
+            }
+            else
+            {
+                return "NAN";
+            }
+        }
+        public string userInput(string input)
         {
             // Split the input into an array of strings
             string[] inputArray = input.Split(' ');
@@ -407,6 +506,12 @@ namespace physics_equations
                         {
                             // Cast the returned value to Vector3
                             Vector3 returnVector = (Vector3)result;
+                            return deleteSymbolsWithSpace(returnVector.ToString());
+                        }
+                        else if (returnType == typeof(Vector2))
+                        {
+                            // Cast the returned value to Vector3
+                            Vector2 returnVector = (Vector2)result;
                             return returnVector.ToString();
                         }
                         else
@@ -438,11 +543,17 @@ namespace physics_equations
                     {
                         ParameterInfo[] p = method.GetParameters();
                         string parametersNeeded = "\n";
+                        string s = "";
                         foreach (ParameterInfo pi in p)
                         {
-                            parametersNeeded += pi.Name + ": " + pi.ParameterType.ToString() + ", ";
+                            parametersNeeded += pi.Name + ": " + pi.ParameterType.ToString() + " \n";
+                            
+                            s += exampleBasedOnType(pi.ParameterType) + " ";
                         }
-                        return "Invalid command, " + $"variables needed for the function {method.Name}:" + parametersNeeded + $"\n{p.Length} parameters is needed";
+                        return "Invalid command, " + $"variables needed for the function {method.Name}:" + 
+                            parametersNeeded + $"\n{p.Length} parameters is needed" + 
+                            $"\n example: {method.Name} {s}";
+
                     }
 
                 }
@@ -455,6 +566,7 @@ namespace physics_equations
             }
             return "";
         }
+
         #endregion
     }
 }
