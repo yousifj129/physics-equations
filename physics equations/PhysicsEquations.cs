@@ -415,7 +415,7 @@ namespace physics_equations
             }
             else if (t == typeof(Vector3))
             {
-                return $"{Math.Round(Random(0, 10), 1)},{Math.Round(Random(0, 10), 1)},{Math.Round(Random(0, 10), 1)}";
+                return $"({Math.Round(Random(0, 1), 1)},{Math.Round(Random(0, 1), 1)},{Math.Round(Random(0, 1), 1)})";
             }
             else
             {
@@ -506,13 +506,54 @@ namespace physics_equations
                         {
                             // Cast the returned value to Vector3
                             Vector3 returnVector = (Vector3)result;
-                            return deleteSymbolsWithSpace(returnVector.ToString());
+                            return "("+ deleteSymbolsWithSpace(returnVector.ToString()) + ")";
                         }
                         else if (returnType == typeof(Vector2))
                         {
                             // Cast the returned value to Vector3
                             Vector2 returnVector = (Vector2)result;
-                            return returnVector.ToString();
+                            return "(" + deleteSymbolsWithSpace(returnVector.ToString()) + ")";
+                        }
+                        else if(returnType == typeof(string))
+                        {
+                            string returnString = (string)result;
+                            return returnString;
+                        }
+                        else if (returnType == typeof(string[]))
+                        {
+                            string s = "\n";
+                            foreach (string obj in (string[])result)
+                            {
+                                s+= obj + "\n";
+                            }
+                            return s;
+                        }
+                        else if (returnType == typeof(double[]))
+                        {
+                            string s = "\n";
+                            foreach (double obj in (double[])result)
+                            {
+                                s += obj.ToString() + "\n";
+                            }
+                            return s;
+                        }
+                        else if (returnType == typeof(Vector3[]))
+                        {
+                            string s = "\n";
+                            foreach (Vector3 obj in (Vector3[])result)
+                            {
+                                s += "("+deleteSymbolsWithSpace(obj.ToString()) + ")\n";
+                            }
+                            return s;
+                        }
+                        else if (returnType == typeof(Vector2[]))
+                        {
+                            string s = "\n";
+                            foreach (Vector2 obj in (Vector2[])result)
+                            {
+                                s += "(" + deleteSymbolsWithSpace(obj.ToString()) + ")\n";
+                            }
+                            return s;
                         }
                         else
                         {
@@ -567,6 +608,60 @@ namespace physics_equations
             return "";
         }
 
+        public string getAllVariables()
+        {
+            Type type = typeof(PhysicsEquations);
+            FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+            Dictionary<string,object> variables = new Dictionary<string, object>();
+            foreach (FieldInfo field in fields)
+            {
+                variables.Add(field.Name ,field.GetValue(this));
+            }
+            string s = "\n";
+            foreach (var item in variables)
+            {
+                s += item.Key + ": " + item.Value + "\n";
+            }
+            return s;
+        }
+        public string getAllMethods()
+        {
+            Type type = typeof(PhysicsEquations);
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            List<string> variables = new List<string>();
+            foreach (MethodInfo method in methods)
+            {
+                variables.Add(method.Name);
+            }
+            string s = "\n";
+            foreach (var item in variables)
+            {
+                s += item + "\n";
+            }
+            return s;
+        }
         #endregion
+
+        public string[] GetStringArrayWithOnes(int length)
+        {
+            string[] array = new string[length];
+            for (int i = 0; i < length; i++)
+            {
+                array[i] = "1";
+            }
+            return array;
+        }
+        public Vector3[] GetVector3ArrayWithOnes(int length)
+        {
+            Vector3[] array = new Vector3[length];
+            Vector3 onesVector = new Vector3(1, 1, 1);
+
+            for (int i = 0; i < length; i++)
+            {
+                array[i] = onesVector;
+            }
+
+            return array;
+        }
     }
 }
