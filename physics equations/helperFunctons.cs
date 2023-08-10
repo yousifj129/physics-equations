@@ -85,8 +85,8 @@ namespace helperFunctions
         public static bool TryParseVector2(string value, out Vector2 parsedValue)
         {
             parsedValue = new Vector2(0, 0);
-
-            string[] components = value.Split(',');
+            string s = deleteSymbolsWithSpace(value);
+            string[] components = s.Split(',');
 
             if (components.Length == 3 &&
                 float.TryParse(components[0], out float x) &&
