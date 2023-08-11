@@ -563,8 +563,9 @@ namespace physics_equations
             }
             public bool CalculateTotalInternalReflection(double angleOfIncidence, double refractiveIndex1, double refractiveIndex2)
             {
+                double angleInRadians = angleOfIncidence * Math.PI / 180;
                 double criticalAngle = Math.Asin(refractiveIndex2 / refractiveIndex1);
-                return angleOfIncidence > criticalAngle;
+                return angleInRadians > criticalAngle;
             }
             public double CalculateLensPower(double focalLength)
             {
@@ -580,6 +581,11 @@ namespace physics_equations
             {
                 double imageDistance = 1 / ((1 / focalLength) - (1 / objectDistance));
                 return imageDistance;
+            }
+            public double CalculateFocalLength(double objectDistance, double imageDistance)
+            {
+                double focalLength = 1 / ((1 / objectDistance) + (1 / imageDistance));
+                return focalLength * 1000;
             }
             public double CalculateThinLensEquation(double focalLength, double imageDistance = double.NaN, double objectDistance = double.NaN)
             {
@@ -647,8 +653,40 @@ namespace physics_equations
             double electrostaticEnergy = CoulombConstant * charge1 * charge2 / distance;
             return electrostaticEnergy;
         }
+        public double LennardJonesPotential(double distance, double A, double B)
+        {
+            double r6 = Math.Pow(distance, 6);
+            double r12 = Math.Pow(distance, 12);
+
+            double potentialEnergy = (A / r12) - (B / r6);
+
+            return potentialEnergy;
+        }
+        public Vector3 CalculateLennardJonesForce(Vector3 positionA, Vector3 positionB, double A, double B)
+        {
+            Vector3 displacement = positionA - positionB;
+            double distance = displacement.Length();
+
+            double r6 = Math.Pow(distance, 6);
+            double r12 = Math.Pow(distance, 12);
+
+            double forceMagnitude = ((-12 * A) / (r12 * distance)) + ((6 * B) / (r6 * distance));
+            Vector3 force = ((float)forceMagnitude) * (displacement / ((float)distance));
+
+            return force;
+        }
+        public Vector3 CalculateLennardJonesVelocity(Vector3 positionA, Vector3 positionB, Vector3 velocityA, double massA, double A, double B, double timeStep)
+        {
+            Vector3 force = CalculateLennardJonesForce(positionA, positionB, A, B);
+            Vector3 accelerationA = force / ((float)massA) ;
+
+            Vector3 velocityChangeA = accelerationA * ((float)timeStep);
+            Vector3 newVelocityA = velocityA + velocityChangeA;
+
+            return newVelocityA;
+        }
         #endregion
-        
+
         #region vectors
         public Vector3 AddVector(Vector3 vector1, Vector3 vector2)
         {
@@ -830,6 +868,18 @@ namespace physics_equations
                             foreach (Vector2 obj in (Vector2[])result)
                             {
                                 s += "(" + deleteSymbolsWithSpace(obj.ToString()) + ")\n";
+                            }
+                            return s;
+                        }
+                        else if (returnType == typeof(bool))
+                        {
+                            string s = "";
+                            if((bool)result == true)
+                            {
+                                s = "true";
+                            }else
+                            {
+                                s = "false";
                             }
                             return s;
                         }
