@@ -879,7 +879,7 @@ namespace physics_equations
                                 s = "true";
                             }else
                             {
-                                s = "false";
+                                s = "false";#if
                             }
                             return s;
                         }
