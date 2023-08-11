@@ -7,6 +7,8 @@ using System.Numerics;
 
 using static helperFunctions.HelperFunctions;
 using System.Reflection;
+using System.Numerics.Tensors;
+using System.Drawing;
 
 namespace physics_equations
 {
@@ -151,6 +153,42 @@ namespace physics_equations
 
         #endregion
 
+        #region Calculus Helpful Functions
+        public double[] CalculatePartialDerivatives(double[] variables, double[] metricComponents)
+        {
+            PartialDerivativesCalculator pdc = new PartialDerivativesCalculator();
+            return pdc.CalculatePartialDerivatives(variables, metricComponents);
+        }
+        public double Sigmoid(double x)
+        {
+            return 1.0 / (1.0 + Math.Exp(-x));
+        }
+        public double Sin(double x)
+        {
+            return Math.Sin(x);
+        }
+        public double Cos(double x)
+        {
+            return Math.Cos(x);
+        }
+        public double Tan(double x)
+        {
+            return Math.Tan(x);
+        }
+        public double Sinh(double x)
+        {
+            return Math.Sinh(x);
+        }
+        public double Cosh(double x)
+        {
+            return Math.Cosh(x);
+        }
+        public double Tanh(double x)
+        {
+            return Math.Tanh(x);
+        }
+        #endregion
+
         #region uncertainty princples 
         public double CalculateUncertainty(double deltaP)
         {
@@ -251,6 +289,8 @@ namespace physics_equations
         #endregion
 
         #region physics
+
+            #region kinetic stuff
         public double KineticEnergy(double mass, double velocity)
         {
             double kineticEnergy = 0.5 * mass * Math.Pow(velocity, 2);
@@ -304,7 +344,9 @@ namespace physics_equations
 
             return velocity;
         }
-        
+        #endregion
+
+            #region gravity stuff
         public double GravitationalPotentialEnergy(double mass, double height, double gravitationalAcceleration)
         {
             double gravitationalPotentialEnergy = mass * gravitationalAcceleration * height;
@@ -320,6 +362,16 @@ namespace physics_equations
             double gravitationalEnergy = (GravitationalConstant * mass1 * mass2) / distance;
             return gravitationalEnergy;
         }
+        public double GravitationalForceBergman(double mass1, double mass2, double distance)
+        {
+            double gravitationalConstant = 6.67430e-11; // Gravitational constant
+            double alpha = 0.5; // Constant specific to Bergman theory
+
+            double force = (gravitationalConstant * mass1 * mass2) / (Math.Pow(distance, 2) * (1 + alpha * distance));
+
+            return force;
+        }
+        //this is wrong, i am just gonna make it later
         public  double GeneralRelativityGravity( double mass1, double mass2, double distance)
         {
             // Schwarzschild radius of the system
@@ -330,13 +382,82 @@ namespace physics_equations
             {
                 return 0;
             }
-
+            
             // Calculate the gravitational force using the general relativity equation
             double force = -GravitationalConstant * mass1 * mass2 / (distance * distance) *
                            (1 - rs / distance) / Math.Sqrt(1 - rs / distance);
 
             return force;
         }
+        public Vector3 ModifiedNewtonianDynamicsVelocity(double mass1, Vector3 pos1, double mass2, Vector3 pos2)
+        {
+            double a0 = 1.2e-10; // MOND acceleration constant
+            Vector3 r = pos2 - pos1;
+            double R = r.Length();
+            double m = mass1 + mass2;
+            double u = R / a0;
+
+            double f;
+            if (u > 1e-3)
+            {
+                f = GravitationalConstant * m / (R * R);
+            }
+            else
+            {
+                f = GravitationalConstant * m * a0 / (1 + u) * Math.Exp(-u);
+            }
+             
+            return Vector3.Normalize(r) * (float)f * (float)mass2;
+        }
+        public Vector3 NewtonianGravityVelocity(double mass1, Vector3 pos1, double mass2, Vector3 pos2)
+        {
+            Vector3 r = pos2 - pos1;
+            double R = r.Length();
+            double forceMagnitude = GravitationalConstant * mass1 * mass2 / (R * R * R);
+
+            return Vector3.Normalize(r) * (float)forceMagnitude / (float)mass2;
+        }
+        public Vector3 GeneralRelativityEinsteinSchwarzschild(double mass1, Vector3 pos1, double mass2, Vector3 pos2)
+        {
+            double m = mass1 + mass2;
+            Vector3 r = pos2 - pos1;
+            double R = r.Length();
+
+            // Schwarzschild radius of the system
+            double rs = 2 * GravitationalConstant * m / (SpeedOfLight * SpeedOfLight);
+
+            // Check if the objects are inside their combined Schwarzschild radius
+            if (R <= rs)
+            {
+                return Vector3.Zero;
+            }
+
+            // Schwarzschild metric tensor
+            Matrix4x4 g = new Matrix4x4();
+            g.M11 = (float)-(1 - rs / R);
+            g.M22 = (float)(1 / (1 - rs / R));
+            g.M33 = (float)(r.Y * r.Y / R / R);
+            g.M44 = (float)(r.Z * r.Z / R / R);
+            g.M12 = g.M21 = (float)(-rs * r.X / R / R / R / 2);
+            g.M13 = g.M31 = (float)(-rs * r.Y * r.X / R / R / R / 2);
+            g.M14 = g.M41 = (float)(-rs * r.Z * r.X / R / R / R / 2);
+            g.M23 = g.M32 = (float)(-rs * r.Y * r.Y * r.X / R / R / R / 2);
+            g.M24 = g.M42 = (float)(-rs * r.Y * r.Z * r.X / R / R / R / 2);
+            g.M34 = g.M43 = (float)(-rs * r.Z * r.Y * r.X / R / R / R / 2);
+
+            // Geodesic equation
+            Vector3 d2xdt2 = new Vector3(
+                (float)(0.5 * (g.M21 * g.M11 + g.M22 * g.M12 + g.M23 * g.M13 + g.M24 * g.M14)),
+                (float)(0.5 * (g.M31 * g.M11 + g.M32 * g.M12 + g.M33 * g.M13 + g.M34 * g.M14)),
+                (float)(0.5 * (g.M41 * g.M11 + g.M42 * g.M12 + g.M43 * g.M13 + g.M44 * g.M14))
+            ) * (float)m;
+
+            return d2xdt2 * (float)mass2;
+        }
+
+        #endregion
+
+            #region elastic energy
         public double CalculateElasticEnergy(double springConstant, double displacement)
         {
             // Ensure the displacement is positive
@@ -347,6 +468,7 @@ namespace physics_equations
 
             return elasticEnergy;
         }
+        //this is wrong, but i kept it anyway
         public double CalculateElasticEnergyComplex(double springConstantNPerMeter, double displacementMeters, double wireDiameterMeters, double coilCount)
         {
             // Ensure the displacement is positive
@@ -360,7 +482,163 @@ namespace physics_equations
 
             return elasticEnergyJoules;
         }
+        #endregion
 
+            #region resistances 
+            public double AirResistanceEnergy(double radius, double weight, double velocity, double airDensity, double dragCoefficient)
+            {
+                // Calculate cross-sectional area
+                double crossSectionalArea = Math.PI * Math.Pow(radius, 2);
+
+                // Calculate air resistance energy
+                double airResistanceEnergy = (-0.5) * airDensity * crossSectionalArea * Math.Pow(velocity, 2) * dragCoefficient;
+
+                return airResistanceEnergy;
+            }
+            public double FrictionResistance(double normalForce, double FrictionCoefficient)
+            {
+                double staticFriction = FrictionCoefficient * normalForce;
+                return staticFriction;
+            }
+            public double FluidResistance(double velocity, double crossSectionalArea, double dragCoefficient, double fluidDensity)
+            {
+                double fluidResistance = 0.5 * dragCoefficient * fluidDensity * Math.Pow(velocity, 2) * crossSectionalArea;
+                return fluidResistance;
+            }
+            public double ElectricalResistance(double resistivity, double length, double crossSectionalArea)
+            {
+                double resistance = (resistivity * length) / crossSectionalArea;
+                return resistance;
+            }
+            public double MagneticResistance(double magneticReluctanceCoefficient, double magneticFlux)
+            {
+                double magneticResistance = magneticReluctanceCoefficient * magneticFlux;
+                return magneticResistance;
+            }
+            public double ThermalResistance(double thermalConductivity, double thickness, double crossSectionalArea)
+            {
+                double thermalResistance = thickness / (thermalConductivity * crossSectionalArea);
+                return thermalResistance;
+            }
+            public double SoundAbsorptionCoefficient(double totalSurfaceArea, double absorptionArea, double reverberationTime)
+            {
+                double soundAbsorptionCoefficient = (absorptionArea / totalSurfaceArea) * (1.0 - Math.Exp(-0.161 * reverberationTime));
+                return soundAbsorptionCoefficient;
+            }
+            public double AxialResistance(double crossSectionalArea, double yieldStrength)
+            {
+                double axialResistance = crossSectionalArea * yieldStrength;
+                return axialResistance;
+            }
+            #endregion
+
+            #region thermodynamics
+            public double CalculateHeatTransfer(double temperatureDifference, double thermalConductivity)
+            {
+                double heatTransfer = temperatureDifference * thermalConductivity;
+                return heatTransfer;
+            }
+            public double CalculateEntropy(double temperature, double heatTransfer)
+            {
+                double entropyChange = heatTransfer / temperature;
+                return entropyChange;
+            }
+            public double CalculateIdealGasLaw(double pressure, double volume, double temperature)
+            {
+                double result = (pressure * volume) / temperature;
+                return result;
+            }
+            public double CalculateInternalEnergyThermo(double heatTransfer, double workDone)
+            {
+                double internalEnergyChange = heatTransfer - workDone;
+                return internalEnergyChange;
+            }
+        #endregion
+
+            #region optics
+            public double CalculateRefractionAngle(double angleOfIncidence, double refractiveIndex1, double refractiveIndex2)
+            {
+                double refractionAngle = Math.Asin(refractiveIndex1 / refractiveIndex2 * Math.Sin(angleOfIncidence));
+                return refractionAngle;
+            }
+            public bool CalculateTotalInternalReflection(double angleOfIncidence, double refractiveIndex1, double refractiveIndex2)
+            {
+                double criticalAngle = Math.Asin(refractiveIndex2 / refractiveIndex1);
+                return angleOfIncidence > criticalAngle;
+            }
+            public double CalculateLensPower(double focalLength)
+            {
+                double lensPower = 1.0 / focalLength;
+                return lensPower;
+            }
+            public double CalculateMagnification(double objectHeight, double imageHeight)
+            {
+                double magnification = imageHeight / objectHeight;
+                return magnification;
+            }
+            public double CalculateImageDistance(double objectDistance, double focalLength)
+            {
+                double imageDistance = 1 / ((1 / focalLength) - (1 / objectDistance));
+                return imageDistance;
+            }
+            public double CalculateThinLensEquation(double focalLength, double imageDistance = double.NaN, double objectDistance = double.NaN)
+            {
+                if (double.IsNaN(imageDistance))
+                {
+                    // Calculate image distance if it is not provided
+                    imageDistance = 1 / ((1 / focalLength) - (1 / objectDistance));
+                    return imageDistance;
+                }
+                else if (double.IsNaN(objectDistance))
+                {
+                    // Calculate object distance if it is not provided
+                    objectDistance = 1 / ((1 / focalLength) - (1 / imageDistance));
+                    return objectDistance;
+                }
+                else
+                {
+                    // Invalid input, both image distance and object distance are provided
+                    throw new ArgumentException("Provide either the image distance or the object distance, not both.");
+                }
+            }
+            public double CalculateMirrorEquation(double focalLength, double imageDistance = double.NaN, double objectDistance = double.NaN)
+            {
+                if (double.IsNaN(imageDistance))
+                {
+                    // Calculate image distance if it is not provided
+                    imageDistance = 1 / ((1 / focalLength) - (1 / objectDistance));
+                    return imageDistance;
+                }
+                else if (double.IsNaN(objectDistance))
+                {
+                    // Calculate object distance if it is not provided
+                    objectDistance = 1 / ((1 / focalLength) - (1 / imageDistance));
+                    return objectDistance;
+                }
+                else
+                {
+                    // Invalid input, both image distance and object distance are provided
+                    throw new ArgumentException("Provide either the image distance or the object distance, not both.");
+                }
+            }
+            public double CalculateSnellLaw(double incidentAngle, double refractiveIndex1, double refractiveIndex2)
+            {
+                double refractedAngle = Math.Asin(refractiveIndex1 / refractiveIndex2 * Math.Sin(incidentAngle));
+                return refractedAngle;
+            }
+            public double CalculateCriticalAngle(double refractiveIndex1, double refractiveIndex2)
+            {
+                double criticalAngle = Math.Asin(refractiveIndex2 / refractiveIndex1);
+                return criticalAngle;
+            }
+            public double CalculateDispersion(double refractiveIndexRed, double refractiveIndexBlue, double refractiveIndexYellow)
+            {
+                double dispersion = (refractiveIndexYellow - 1) / (refractiveIndexBlue - refractiveIndexRed);
+                return dispersion;
+            }
+            #endregion
+        
+        
         #endregion
 
         #region quantum physics
@@ -641,7 +919,6 @@ namespace physics_equations
             return s;
         }
         #endregion
-
         public string[] GetStringArrayWithOnes(int length)
         {
             string[] array = new string[length];
