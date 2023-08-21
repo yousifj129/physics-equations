@@ -54,16 +54,7 @@ namespace physics_equations
 
             return partialDerivative;
         }
-        public double RichardsonExtrapolation(double y_n, double y_n_1, int k)
-{
-    // Calculate the error estimate
-    double error = y_n - y_n_1;
-
-    // Calculate the improved approximation
-    double y_new = y_n - (error / (2^k - 1));
-
-    return y_new;
-        }
+        
         
         private double CalculateFunction(double x, double y, double z, double[] variables, double g11)
         {
@@ -100,7 +91,16 @@ namespace physics_equations
 
         return partialDerivatives;
     }
+    public double RichardsonExtrapolation(double y_n, double y_n_1, int k)
+{
+    // Calculate the error estimate
+    double error = y_n - y_n_1;
 
+    // Calculate the improved approximation
+    double y_new = y_n - (error / (2^k - 1));
+
+    return y_new;
+    }
     private double CalculatePartialDerivativeRichardson(double x, double y, double z, double g11, double[] variables, int index)
     {
         double epsilon = 1e-6; // Small value for numerical differentiation
