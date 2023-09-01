@@ -18,11 +18,21 @@ namespace helperFunctions
         {
             if (targetType == typeof(double))
             {
-                if (double.TryParse(value, out double doubleValue))
+                if(value.ToLower() == "nan")
                 {
-                    parsedValue = doubleValue;
+                    parsedValue = double.NaN;
                     return true;
+
                 }
+                else
+                {
+                    if (double.TryParse(value, out double doubleValue))
+                    {
+                        parsedValue = doubleValue;
+                        return true;
+                    }
+                }
+
             }
             else if (targetType == typeof(int))
             {
@@ -40,7 +50,7 @@ namespace helperFunctions
                     return true;
                 }
             }
-            else if(targetType == typeof(Vector3))
+            else if (targetType == typeof(Vector3))
             {
                 if (TryParseVector3(value, out Vector3 boolValue))
                 {
@@ -55,6 +65,10 @@ namespace helperFunctions
                     parsedValue = boolValue;
                     return true;
                 }
+            }
+            else if(targetType== typeof(string))
+            {
+                parsedValue = value;
             }
             // Add more handling for other types as needed
 

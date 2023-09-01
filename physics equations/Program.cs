@@ -5,7 +5,9 @@ using System.Reflection;
 using static helperFunctions.HelperFunctions;
 
 PhysicsEquations p = new PhysicsEquations();
-
+string str = p.getMethodsWithDescription();
+string[] methods = str.Split('\n');
+QaSystem qs = new QaSystem(methods);
 while (true)
 {
     Console.WriteLine("Enter a command:");
@@ -13,9 +15,17 @@ while (true)
     if (input == "clear")
     {
         Console.Clear();
-        break;
+        continue;
     }
-    Console.WriteLine("results : " + p.userInput(input));
+    string result = p.calculateMultiple(input);
+    if(result == "")
+    {
+        Console.WriteLine("chatbot : " + qs.GetAnswerSemantic(input));
+    }
+    else
+    {
+        Console.WriteLine("results : " + result);
+    }
 }
 
 /*double a = 0; 
