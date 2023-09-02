@@ -65,8 +65,6 @@ namespace physics_equations
             return functionValue;
         }
     }
-<<<<<<< HEAD
-
     public class GeneralRelativityCalculator
     {
         // Calculate magnitude of Vector3
@@ -221,7 +219,6 @@ namespace physics_equations
         }
 
     }
-=======
     public class PartialDerivativesRichardsonExtrapolationCalculator
 {
     public double[] CalculatePartialDerivatives(double[] variables, double[] metricComponents)
@@ -286,5 +283,4 @@ namespace physics_equations
     }
     }
     
->>>>>>> 8c41584e80a78e219909f57b681ad8184dbecb75
 }
