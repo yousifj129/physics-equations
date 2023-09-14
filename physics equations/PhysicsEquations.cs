@@ -995,6 +995,8 @@ namespace physics_equations
         }
 
 
+
+
         public string calculateMultiple(string input)
         {
             string[] operations = input.Split(new char[] { '+', '-', '*', '/' }, StringSplitOptions.RemoveEmptyEntries);
