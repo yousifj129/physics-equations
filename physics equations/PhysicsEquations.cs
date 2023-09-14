@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Numerics;
 
 using static helperFunctions.HelperFunctions;
+using helperFunctions;
 using System.Reflection;
 using System.Numerics.Tensors;
 using System.Drawing;
@@ -248,7 +249,7 @@ namespace physics_equations
             double transitionProbability = Math.Pow(Math.Abs(initialWavefunction * finalWavefunction), 2);
             return transitionProbability;
         }
-        [Description("fermi dirac distribution probability")]
+        [Description("fermi dirac distribution probability"), story("")]
         public double FermiDiracDistribution(double energy, double temperature, double mu)
         {
             double k = 8.617333262145e-5; // Boltzmann constant

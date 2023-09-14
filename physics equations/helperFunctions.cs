@@ -10,6 +10,7 @@ namespace helperFunctions
 {
     public static class HelperFunctions
     {
+        
         public static void Print(string s)
         {
             Console.WriteLine(s);
@@ -112,5 +113,43 @@ namespace helperFunctions
 
             return false;
         }
+    }
+
+    [AttributeUsage(AttributeTargets.All)]
+    public class story : Attribute
+    {
+        /// <summary>
+        /// Specifies the default value for the <see cref='System.ComponentModel.DescriptionAttribute'/>,
+        /// which is an empty string (""). This <see langword='static'/> field is read-only.
+        /// </summary>
+        public static readonly story Default = new story();
+
+        public story() : this(string.Empty)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref='System.ComponentModel.story'/> class.
+        /// </summary>
+        public story(string description)
+        {
+            DescriptionValue = description;
+        }
+
+        /// <summary>
+        /// Gets the description stored in this attribute.
+        /// </summary>
+        public virtual string Description => DescriptionValue;
+
+        /// <summary>
+        /// Read/Write property that directly modifies the string stored in the description
+        /// attribute. The default implementation of the <see cref="Description"/> property
+        /// simply returns this value.
+        /// </summary>
+        protected string DescriptionValue { get; set; }
+
+        public override int GetHashCode() => Description?.GetHashCode() ?? 0;
+
+        public override bool IsDefaultAttribute() => Equals(Default);
     }
 }
