@@ -1027,7 +1027,15 @@ namespace physics_equations
 
                 if (!double.TryParse(userInputResult, out double parsedValue))
                 {
-                    return $"Invalid input: Failed to parse operation '{trimmedOperation}' as a number.";
+                    try {
+                        parsedValue = double.Parse(trimmedOperation);
+                    }
+                    catch
+                    {
+                        return $"Invalid input: Failed to parse operation '{trimmedOperation}' as a number.";
+                    }
+
+
                 }
 
                 if (isFirstOperation)
@@ -1079,7 +1087,7 @@ namespace physics_equations
             string s = "\n";
             foreach (var item in variables)
             {
-                s += item.Key + ": " + item.Value + "\n";
+                s += item.Key + "\n";
             }
             return s;
         }

@@ -161,7 +161,25 @@ namespace physics_equations
 
             return force;
         }
+        public static double CalculateGravityForceKerrNewman(double mass1, double mass2, double distance, double theta, double phi, double charge1, double charge2, double G, double c)
+        {
+            // Calculate the metric components.
+            double[,] metric = KerrMetric(mass1, 0, distance, theta, phi);
 
+            // Calculate the Schwarzschild radius and electric potential.
+            double rs1 = CalculateSchwarzschildRadius(mass1, G, c);
+            double rs2 = CalculateSchwarzschildRadius(mass2, G, c);
+            double potential1 = charge1 / (4 * Math.PI * c * distance);
+            double potential2 = charge2 / (4 * Math.PI * c * distance);
+
+            // Calculate gravitational force.
+            double force = G * (mass1 * mass2) / (distance * distance);
+
+            // Adjust for Schwarzschild radii, metric, and electromagnetic effects.
+            force *= (1 - rs1 / distance) * (1 - rs2 / distance) * metric[0, 0] + potential1 * potential2;
+
+            return force;
+        }
 
         public static Vector3 CalculateGravityVelocitySchwarzschild(Vector3 pos1, double mass1,
                                                Vector3 pos2, double mass2,
@@ -220,67 +238,98 @@ namespace physics_equations
 
     }
     public class PartialDerivativesRichardsonExtrapolationCalculator
-{
-    public double[] CalculatePartialDerivatives(double[] variables, double[] metricComponents)
     {
-        // Define the metric tensor components as functions of the variables
-        double g11 = metricComponents[0];
-        double g12 = metricComponents[1];
-        double g13 = metricComponents[2];
-        double g14 = metricComponents[3];
-        // Define the variables
-        double x = variables[0];
-        double y = variables[1];
-        double z = variables[2];
+        public double[] CalculatePartialDerivatives(double[] variables, double[] metricComponents)
+        {
+            // Define the metric tensor components as functions of the variables
+            double g11 = metricComponents[0];
+            double g12 = metricComponents[1];
+            double g13 = metricComponents[2];
+            double g14 = metricComponents[3];
+            // Define the variables
+            double x = variables[0];
+            double y = variables[1];
+            double z = variables[2];
 
-        // Calculate the partial derivatives using Richardson extrapolation
-        double partialDerivativeX = CalculatePartialDerivativeRichardson(x, y, z, g11, variables, 0);
-        double partialDerivativeY = CalculatePartialDerivativeRichardson(x, y, z, g11, variables, 1);
-        double partialDerivativeZ = CalculatePartialDerivativeRichardson(x, y, z, g11, variables, 2);
+            // Calculate the partial derivatives using Richardson extrapolation
+            double partialDerivativeX = CalculatePartialDerivativeRichardson(x, y, z, g11, variables, 0);
+            double partialDerivativeY = CalculatePartialDerivativeRichardson(x, y, z, g11, variables, 1);
+            double partialDerivativeZ = CalculatePartialDerivativeRichardson(x, y, z, g11, variables, 2);
 
-        // Create an array to hold the partial derivatives
-        double[] partialDerivatives = new double[3];
-        partialDerivatives[0] = partialDerivativeX;
-        partialDerivatives[1] = partialDerivativeY;
-        partialDerivatives[2] = partialDerivativeZ;
+            // Create an array to hold the partial derivatives
+            double[] partialDerivatives = new double[3];
+            partialDerivatives[0] = partialDerivativeX;
+            partialDerivatives[1] = partialDerivativeY;
+            partialDerivatives[2] = partialDerivativeZ;
 
-        return partialDerivatives;
+            return partialDerivatives;
+        }
+        public double RichardsonExtrapolation(double y_n, double y_n_1, int k)
+        {
+        // Calculate the error estimate
+        double error = y_n - y_n_1;
+
+        // Calculate the improved approximation
+        double y_new = y_n - (error / (2^k - 1));
+
+        return y_new;
+        }
+        private double CalculatePartialDerivativeRichardson(double x, double y, double z, double g11, double[] variables, int index)
+        {
+            double epsilon = 1e-6; // Small value for numerical differentiation
+
+            // Perturb the variable at the specified index by epsilon
+            double[] perturbedVariables = (double[])variables.Clone();
+            perturbedVariables[index] += epsilon;
+
+            // Calculate the function values at the original and perturbed variables
+            double originalValue = CalculateFunction(x, y, z, variables, g11);
+            double perturbedValue = CalculateFunction(x, y, z, perturbedVariables, g11);
+
+            // Calculate the partial derivative using the Richardson extrapolation method
+            double partialDerivative = RichardsonExtrapolation(originalValue, perturbedValue, 1);
+
+            return partialDerivative;
+        }
+
+        private double CalculateFunction(double x, double y, double z, double[] variables, double g11)
+        {
+            // Define the function based on the metric tensor component
+            double functionValue = g11 * x * x + y * y + z * z + variables[0] * variables[0];
+
+            return functionValue;
+        }
     }
-    public double RichardsonExtrapolation(double y_n, double y_n_1, int k)
-{
-    // Calculate the error estimate
-    double error = y_n - y_n_1;
 
-    // Calculate the improved approximation
-    double y_new = y_n - (error / (2^k - 1));
 
-    return y_new;
-    }
-    private double CalculatePartialDerivativeRichardson(double x, double y, double z, double g11, double[] variables, int index)
+    public class schrodingerEquations
     {
-        double epsilon = 1e-6; // Small value for numerical differentiation
+        public static Vector2[] SolveSchrodingerEquation(Vector2[] potential, Vector2[] positionGrid, double mass, double hbar)
+        {
+            int n = positionGrid.Length;
+            Vector2[] wavefunction = new Vector2[n];
+            Vector2[] energyLevels = new Vector2[n];
 
-        // Perturb the variable at the specified index by epsilon
-        double[] perturbedVariables = (double[])variables.Clone();
-        perturbedVariables[index] += epsilon;
+            // Calculate the Laplacian of the wavefunction using finite differences.
+            float deltaX = positionGrid[1].X - positionGrid[0].X;
+            float deltaY = positionGrid[1].Y - positionGrid[0].Y;
+            Vector2[] laplacian = new Vector2[n];
+            for (int i = 1; i < n - 1; i++)
+            {
+                float d2PsiX = (wavefunction[i + 1].X - 2 * wavefunction[i].X + wavefunction[i - 1].X) / (deltaX * deltaX);
+                float d2PsiY = (wavefunction[i + 1].Y - 2 * wavefunction[i].Y + wavefunction[i - 1].Y) / (deltaY * deltaY);
+                laplacian[i] = new Vector2(d2PsiX, d2PsiY);
+            }
 
-        // Calculate the function values at the original and perturbed variables
-        double originalValue = CalculateFunction(x, y, z, variables, g11);
-        double perturbedValue = CalculateFunction(x, y, z, perturbedVariables, g11);
+            // Solve the Schrödinger equation for each point in the grid.
+            for (int i = 0; i < n; i++)
+            {
+                float potentialEnergy = potential[i].X + potential[i].Y;
+                float kineticEnergy = (float)((hbar * hbar) / (2 * mass) * (laplacian[i].X + laplacian[i].Y));
+                energyLevels[i] = new Vector2(potentialEnergy, kineticEnergy);
+            }
 
-        // Calculate the partial derivative using the Richardson extrapolation method
-        double partialDerivative = RichardsonExtrapolation(originalValue, perturbedValue, 1);
-
-        return partialDerivative;
+            return energyLevels;
+        }
     }
-
-    private double CalculateFunction(double x, double y, double z, double[] variables, double g11)
-    {
-        // Define the function based on the metric tensor component
-        double functionValue = g11 * x * x + y * y + z * z + variables[0] * variables[0];
-
-        return functionValue;
-    }
-    }
-    
 }
