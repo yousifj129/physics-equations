@@ -35,6 +35,29 @@ namespace helperFunctions
                 }
 
             }
+            else if(targetType == typeof(double[]))
+            {
+                if (value.ToLower() == "nan")
+                {
+                    parsedValue = double.NaN;
+                    return true;
+
+                }
+                else
+                {
+                    string[] s = value.Split(',');
+                    double[] doubleValue = new double[s.Length];
+                    int i = 0;
+                    foreach(string str in s)
+                    {
+                        doubleValue[i] = double.Parse(str);
+                        i++;
+                    }
+                    parsedValue = doubleValue;
+                    return true;
+                }
+
+            }
             else if (targetType == typeof(int))
             {
                 if (int.TryParse(value, out int intValue))
