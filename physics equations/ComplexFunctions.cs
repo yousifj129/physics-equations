@@ -331,5 +331,38 @@ namespace physics_equations
 
             return energyLevels;
         }
+        public static Complex[] oneDboxSchrodinger(double L, int numPoints)
+        {
+            double h = 1.0; // Planck's constant (you can adjust this value)
+            double m = 1.0; // mass of the particle (you can adjust this value)
+
+            double dx = L / (numPoints - 1); // spacing between grid points
+            double h2over2m = (h * h) / (2.0 * m);
+
+            Complex[] wavefunction = new Complex[numPoints];
+            double[] x = new double[numPoints];
+
+            // Initialize the wavefunction and position array
+            for (int i = 0; i < numPoints; i++)
+            {
+                wavefunction[i] = Complex.Zero;
+                x[i] = i * dx;
+            }
+
+            // Set the boundary conditions
+            wavefunction[0] = Complex.Zero;
+            wavefunction[numPoints - 1] = Complex.Zero;
+
+            // Solve the Schrödinger equation using finite difference method
+            for (int i = 1; i < numPoints - 1; i++)
+            {
+                double potential = 0.0; // potential energy inside the box (zero in this case)
+                double energy = 2.0 * h2over2m + potential;
+
+                wavefunction[i] = energy * wavefunction[i] - wavefunction[i - 1] - wavefunction[i + 1];
+            }
+
+            return wavefunction;
+        }
     }
 }
